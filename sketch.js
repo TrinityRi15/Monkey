@@ -1,123 +1,129 @@
-//Game States
-var PLAY=1;
-var END=0;
-var gameState=1;
 
-var sword,fruit ,monster,fruitGroup,enemyGroup, score,r,randomFruit;
-var swordImage , fruit1, fruit2 ,fruit3,fruit4, monsterImage, gameOverImage
-
+var monkey , monkey_running
+var banana ,bananaImage, obstacle, obstacleImage
+var FoodGroup, obstacleGroup
+var score
 
 function preload(){
  
-  swordImage = loadImage("sword.png");
-  monsterImage = loadAnimation("alien1.png","alien2.png")
-  fruit1 = loadImage("fruit1.png");
-  fruit2 = loadImage("fruit2.png");
-  fruit3 = loadImage("fruit3.png");
-  fruit4 = loadImage("fruit4.png");
-  gameOverImage = loadImage("gameover.png")
+ 
+  monkey_running =            loadAnimation("sprite_0.png","sprite_1.png","sprite_2.png","sprite_3.png","sprite_4.png","sprite_5.png","sprite_6.png","sprite_7.png","sprite_8.png")
+ 
+  bananaImage = loadImage("banana.png");
+  obstaceImage = loadImage("obstacle.png");
  
 }
 
 
 
 function setup() {
-  createCanvas(600, 600);
+  // createCanvas(600, 600);
  
-  //creating sword
-   sword=createSprite(40,200,20,20);
-   sword.addImage(swordImage);
-   sword.scale=0.7
- 
- 
-  //set collider for sword
-  sword.setCollider("rectangle",0,0,40,40);
 
-  // Score variables and Groups
-  score=0;
-  fruitGroup=createGroup();
-  enemyGroup=createGroup();
+
+  var survivalTime=0;
+ 
+  //creating monkey
+   monkey=createSprite(80,315,20,20);
+   monkey.addAnimation("moving", monkey_running);
+  // monkey.addImage(bananaImage)
+   monkey.scale=0.1
+ 
+  ground = createSprite(400,350,900,10);
+  ground.velocityX=-4;
+  ground.x=ground.width/2;
+  console.log(ground.x)
+
+  FoodGroup = new Group();
+  obstaclesGroup = new Group();
+
+  score = 0;
+ 
  
 }
+
 
 function draw() {
-  background("lightblue");
  
-  if(gameState===PLAY){
-   
-    //Call fruits and Enemy function
-    fruits();
-    Enemy();
-   
-    // Move sword with mouse
-    sword.y=World.mouseY;
-    sword.x=World.mouseX;
+  background(255);
  
-    // Increase score if sword touching fruit
-    if(fruitGroup.isTouching(sword)){
-      fruitGroup.destroyEach();
-      score=score+2;
-    }
-    else
-    {
-      // Go to end state if sword touching enemy
-      if(enemyGroup.isTouching(sword)){
-        gameState=END;
-       
-        fruitGroup.destroyEach();
-        enemyGroup.destroyEach();
-        fruitGroup.setVelocityXEach(0);
-        enemyGroup.setVelocityXEach(0);
-       
-        // Change the animation of sword to gameover and reset its position
-        sword.addImage(gameOverImage);
-        sword.x=200;
-        sword.y=200;
-      }
-    }
+   
+  if(ground.x<0) {
+    ground.x=ground.width/2;
   }
+ 
+ 
+   
+    if(keyDown("space") ) {
+      monkey.velocityY = -12;
+    }
+    monkey.velocityY = monkey.velocityY + 0.8;
+ 
+    monkey.collide(ground);  
+    spawnFood();
+    spawnObstacles();
  
   drawSprites();
+  stroke("white");
+  textSize(20);
+  fill("white");
+  text("Score: "+ score, 500,50);        
  
-  //Display score
-  text("Score : "+ score,300,30);
+ 
+    if(obstaclesGroup.isTouching(monkey)){
+        ground.velocityX = 0;
+        monkey.velocityY = 0;
+        obstaclesGroup.setVelocityXEach(0);
+        FoodGroup.setVelocityXEach(0);
+        obstaclesGroup.setLifetimeEach(-1);
+        FoodGroup.setLifetimeEach(-1);
+   
+   
+    }
+ 
+  stroke("black");
+  textSize(20);
+  fill("black");
+  survivalTime=Math.ceil(frameCount/frameRate())
+  text("Survival Time: "+ survivalTime, 100,50);
 }
 
 
-function Enemy(){
-  if(World.frameCount%200===0){
-    monster=createSprite(400,200,20,20);
-    monster.addAnimation("moving", monsterImage);
-    monster.y=Math.round(random(100,300));
-    monster.velocityX=-8;
-    monster.setLifetime=50;
+
+function spawnFood() {
+  //write code here to spawn the Food
+  if (frameCount % 80 === 0) {
+    banana = createSprite(600,250,40,10);
+    banana.y = random(120,200);    
+    banana.velocityX = -5;
    
-    enemyGroup.add(monster);
+     //assign lifetime to the variable
+    banana.lifetime = 300;
+    monkey.depth = banana.depth + 1;
+   
+    //add image of banana
+     banana.addImage(bananaImage);
+     banana.scale=0.05;
+   
+    //add each banana to the group
+    FoodGroup.add(banana);
   }
 }
 
-function fruits(){
-  if(World.frameCount%80===0){
-    fruit=createSprite(400,200,20,20);
-    fruit.scale=0.2;
-     //fruit.debug=true;
-     r=Math.round(random(1,4));
-    if (r == 1) {
-      fruit.addImage(fruit1);
-    } else if (r == 2) {
-      fruit.addImage(fruit2);
-    } else if (r == 3) {
-      fruit.addImage(fruit3);
-    } else {
-      fruit.addImage(fruit4);
-    }
+function spawnObstacles() {
+  if(frameCount % 300 === 0) {
+    obstacle = createSprite(800,320,10,40);
+    obstacle.velocityX = -6;
    
-    fruit.y=Math.round(random(50,340));
+    //add image to the obstacle
+    obstacle.addImage(obstaceImage);
+    obstacle.scale=0.15;
    
-    fruit.velocityX=-7;
-    fruit.setLifetime=100;
+    //lifetime to the obstacle    
+    obstacle.lifetime = 300;
    
-    fruitGroup.add(fruit);
+    //add each obstacle to the group
+    obstaclesGroup.add(obstacle);
   }
 }
 
